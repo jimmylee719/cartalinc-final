@@ -1,12 +1,6 @@
-// FIX: Imported `AuditStatus` to resolve reference error.
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import { Audit, Profile, TemplateItem, ChecklistTemplate, AuditItem, SupplierCustomItem, AuditItemStatus, AuditStatus } from '../types';
-
-declare global {
-  interface Window {
-    jspdf: any;
-    html2canvas: any;
-  }
-}
 
 interface PdfData {
     audit: Audit;
@@ -20,8 +14,6 @@ interface PdfData {
 
 export const generateCertificatePDF = async (data: PdfData, isPreview: boolean = false): Promise<void> => {
   const { audit, buyer, supplier, templates, templateItems, auditItems, customItems } = data;
-  const { jsPDF } = window.jspdf;
-  const html2canvas = window.html2canvas;
 
   // Helper Functions
   const getTemplateItem = (itemId: string, allTemplateItems: TemplateItem[]): TemplateItem | undefined => {
@@ -188,9 +180,9 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
     finalPageHtml = `
     <div class="page h-[1123px] relative flex flex-col p-10 justify-center items-center text-center bg-gray-50 pb-20">
       <svg class="w-32 h-32 text-green-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-      <h1 class="text-7xl font-bold text-green-600 mt-4">VERIFIED</h1>
+      <h1 class="text-7xl font-bold text-green-600 mt-4" style="font-size: 6rem; line-height: 1; margin-top: 1rem;">VERIFIED</h1>
       <h3 class="text-xl text-gray-700 mt-6">Date of Final Approval: ${new Date(audit.approvalDate).toLocaleDateString()}</h3>
-      <div class="absolute bottom-10 left-0 right-0 text-center text-lg text-black font-semibold">
+      <div class="absolute bottom-10 left-0 right-0 text-center text-lg text-black font-semibold" style="font-size: 1.25rem; line-height: 1.75rem;">
         <p>Report ID: ${audit.id}</p>
         <p class="mt-1">Powered by CartaLinc</p>
       </div>
