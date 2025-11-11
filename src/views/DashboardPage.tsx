@@ -45,7 +45,7 @@ const AuditCard: React.FC<{ audit: Audit; onClick: () => void; userRole: UserRol
             <p className="text-sm text-gray-500">{relatedProfile?.companyName || 'Loading...'}</p>
             <h3 className="text-lg font-bold text-gray-800 mt-1">{audit.auditTitle}</h3>
           </div>
-          <div className={`flex items-center space-x-2 text-xs font-semibold px-3 py-1 rounded-full ${statusInfo.bg} ${statusInfo.textColor}`}>
+          <div className={`inline-flex items-center space-x-2 text-xs font-semibold px-3 py-1 rounded-full ${statusInfo.bg} ${statusInfo.textColor}`}>
             {statusInfo.icon}
             <span>{statusInfo.text}</span>
           </div>
