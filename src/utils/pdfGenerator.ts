@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Audit, Profile, TemplateItem, ChecklistTemplate, AuditItem, SupplierCustomItem, AuditItemStatus, AuditStatus } from '../types';
@@ -15,8 +16,7 @@ interface PdfData {
 export const generateCertificatePDF = async (data: PdfData, isPreview: boolean = false): Promise<void> => {
   const { audit, buyer, supplier, templates, templateItems, auditItems, customItems } = data;
 
-  // ... (所有 Helper Functions 保持不變) ...
-
+  // Helper Functions
   const getTemplateItem = (itemId: string, allTemplateItems: TemplateItem[]): TemplateItem | undefined => {
       return allTemplateItems.find(ti => ti.id === itemId);
   };
@@ -97,11 +97,12 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
     `;
   };
 
+
+  // --- HTML Content Generation ---
   const approvalDateText = audit.approvalDate 
       ? new Date(audit.approvalDate).toLocaleDateString() 
       : (isPreview ? 'Pending Approval' : 'N/A');
 
-  // ... (HTML 字串 coverPageHtml, summaryPageHtml, finalPageHtml 保持不變) ...
   const coverPageHtml = `
     <div class="page h-[1123px] relative flex flex-col p-10 border-4 border-gray-700 bg-white">
       <div class="text-left"><h1 class="text-3xl font-bold text-green-700">CartaLinc</h1></div>
@@ -135,6 +136,7 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
     { title: 'Supplier-Added Evidence', items: customItems }
   ].filter(group => group.items.length > 0);
   
+  // Summary Page HTML
   const checkmarkSvg = `<svg class="w-5 h-5 text-green-600 inline-block mr-3 flex-shrink-0 mt-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>`;
 
   let summaryItemsHtml = '';
@@ -188,6 +190,7 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
     </div>`;
   }
   
+  // --- PDF Generation ---
   const doc = new jsPDF({
     orientation: 'p',
     unit: 'px',
@@ -205,7 +208,6 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
   
   const addPageToPdf = async (htmlContent: string, pageNumber: number | null) => {
       tempElement.innerHTML = `<div class="w-[800px] h-[1123px] bg-white flex flex-col">${htmlContent}</div>`;
-      // **** 主要修正 ****：加上 useCORS: true
       const canvas = await html2canvas(tempElement.firstElementChild as HTMLElement, { scale: 2, useCORS: true, allowTaint: true });
       const imgData = canvas.toDataURL('image/jpeg', 0.8);
       doc.addImage(imgData, 'JPEG', 0, 0, 800, 1123);
@@ -218,7 +220,6 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
   
   // 1. Cover Page
   tempElement.innerHTML = coverPageHtml;
-  // **** 另一個修正 ****：這裡也要加上 useCORS: true
   const coverCanvas = await html2canvas(tempElement.firstElementChild as HTMLElement, { scale: 2, useCORS: true, allowTaint: true });
   const coverImgData = coverCanvas.toDataURL('image/jpeg', 0.8);
   doc.addImage(coverImgData, 'JPEG', 0, 0, 800, 1123);
@@ -230,7 +231,6 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
   doc.addPage();
   await addPageToPdf(summaryPageHtml, 2);
 
-  // ... (檔案剩餘部分保持不變) ...
   // 3. Detail Pages
   let pageNumber = 3;
     if (allItemGroups.length > 0) {
@@ -291,6 +291,15 @@ export const generateCertificatePDF = async (data: PdfData, isPreview: boolean =
       await addPageToPdf(finalPageHtml, null);
   }
 
-  doc.save(`CartaLinc_Report_${supplier.companyName.replace(/ /g, '_')}_${audit.approvalDate || 'DRAFT'}.pdf`);
+  const pdfBlob = doc.output('blob');
+  const blobUrl = URL.createObjectURL(pdfBlob);
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = `CartaLinc_Report_${supplier.companyName.replace(/ /g, '_')}_${audit.approvalDate || 'DRAFT'}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(blobUrl);
+
   document.body.removeChild(tempElement);
 };
